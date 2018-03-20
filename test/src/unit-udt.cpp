@@ -641,7 +641,7 @@ TEST_CASE("custom serializer for pods", "[udt]")
 {
     using custom_json =
         nlohmann::basic_json<std::map, std::vector, std::string, bool,
-        std::int64_t, std::uint64_t, double, std::allocator,
+        std::int64_t, std::uint64_t, double, std::vector<unsigned char>, std::allocator,
         pod_serializer>;
 
     auto p = udt::small_pod{42, '/', 42};
@@ -660,7 +660,7 @@ TEST_CASE("custom serializer for pods", "[udt]")
 template <typename T, typename>
 struct another_adl_serializer;
 
-using custom_json = nlohmann::basic_json<std::map, std::vector, std::string, bool, std::int64_t, std::uint64_t, double, std::allocator, another_adl_serializer>;
+using custom_json = nlohmann::basic_json<std::map, std::vector, std::string, bool, std::int64_t, std::uint64_t, double, std::vector<unsigned char>, std::allocator, another_adl_serializer>;
 
 template <typename T, typename>
 struct another_adl_serializer

@@ -31,6 +31,7 @@ template<template<typename U, typename V, typename... Args> class ObjectType =
          class NumberIntegerType = std::int64_t,
          class NumberUnsignedType = std::uint64_t,
          class NumberFloatType = double,
+         class BinaryType = std::vector<std::uint8_t>,
          template<typename U> class AllocatorType = std::allocator,
          template<typename T, typename SFINAE = void> class JSONSerializer =
          adl_serializer>

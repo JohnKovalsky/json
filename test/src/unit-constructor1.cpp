@@ -88,6 +88,14 @@ TEST_CASE("constructors")
             CHECK(j == "");
         }
 
+        SECTION("binary")
+        {
+            auto t = json::value_t::binary;
+            json j(t);
+            CHECK(j.type() == t);
+            CHECK(j == std::vector<uint8_t>());
+        }
+
         SECTION("number_integer")
         {
             auto t = json::value_t::number_integer;
@@ -142,7 +150,8 @@ TEST_CASE("constructors")
 
         SECTION("filled object")
         {
-            json::object_t o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")}, {"f", json()}};
+            json::object_t o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")},
+                {"f", json(std::vector<uint8_t>({0x33, 0x00, 0x34}))}, {"g", json()}};
             json j(o);
             CHECK(j.type() == json::value_t::object);
         }
@@ -151,12 +160,14 @@ TEST_CASE("constructors")
     SECTION("create an object (implicit)")
     {
         // reference object
-        json::object_t o_reference {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")}, {"f", json()}};
+        json::object_t o_reference {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")},
+            {"f", json(std::vector<uint8_t>({0x33, 0x00, 0x34}))}, {"g", json()}};
         json j_reference(o_reference);
 
         SECTION("std::map<json::string_t, json>")
         {
-            std::map<json::string_t, json> o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")}, {"f", json()}};
+            std::map<json::string_t, json> o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")},
+                {"f", json(std::vector<uint8_t>({0x33, 0x00, 0x34}))}, {"g", json()}};
             json j(o);
             CHECK(j.type() == json::value_t::object);
             CHECK(j == j_reference);
@@ -175,7 +186,8 @@ TEST_CASE("constructors")
 
         SECTION("std::map<const char*, json>")
         {
-            std::map<const char*, json> o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")}, {"f", json()}};
+            std::map<const char*, json> o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")},
+                {"f", json(std::vector<uint8_t>({0x33, 0x00, 0x34}))}, {"g", json()}};
             json j(o);
             CHECK(j.type() == json::value_t::object);
             CHECK(j == j_reference);
@@ -184,7 +196,8 @@ TEST_CASE("constructors")
 
         SECTION("std::multimap<json::string_t, json>")
         {
-            std::multimap<json::string_t, json> o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")}, {"f", json()}};
+            std::multimap<json::string_t, json> o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")},
+                {"f", json(std::vector<uint8_t>({0x33, 0x00, 0x34}))}, {"g", json()}};
             json j(o);
             CHECK(j.type() == json::value_t::object);
             CHECK(j == j_reference);
@@ -192,7 +205,8 @@ TEST_CASE("constructors")
 
         SECTION("std::unordered_map<json::string_t, json>")
         {
-            std::unordered_map<json::string_t, json> o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")}, {"f", json()}};
+            std::unordered_map<json::string_t, json> o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")},
+                {"f", json(std::vector<uint8_t>({0x33, 0x00, 0x34}))}, {"g", json()}};
             json j(o);
             CHECK(j.type() == json::value_t::object);
             CHECK(j == j_reference);
@@ -200,7 +214,8 @@ TEST_CASE("constructors")
 
         SECTION("std::unordered_multimap<json::string_t, json>")
         {
-            std::unordered_multimap<json::string_t, json> o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")}, {"f", json()}};
+            std::unordered_multimap<json::string_t, json> o {{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")},
+                {"f", json(std::vector<uint8_t>({0x33, 0x00, 0x34}))}, {"g", json()}};
             json j(o);
             CHECK(j.type() == json::value_t::object);
             CHECK(j == j_reference);
@@ -208,7 +223,9 @@ TEST_CASE("constructors")
 
         SECTION("associative container literal")
         {
-            json j({{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")}, {"f", json()}});
+            json j({{"a", json(1)}, {"b", json(1u)}, {"c", json(2.2)}, {"d", json(false)}, {"e", json("string")},
+                {"f", json(std::vector<uint8_t>({0x33, 0x00, 0x34}))}, {"g", json()}
+            });
             CHECK(j.type() == json::value_t::object);
             CHECK(j == j_reference);
         }
@@ -234,12 +251,13 @@ TEST_CASE("constructors")
     SECTION("create an array (implicit)")
     {
         // reference array
-        json::array_t a_reference {json(1), json(1u), json(2.2), json(false), json("string"), json()};
+        json::array_t a_reference {json(1), json(1u), json(2.2), json(false), json("string"),
+                                   json(std::vector<uint8_t>({0x33, 0x00, 0x34})), json()};
         json j_reference(a_reference);
 
         SECTION("std::list<json>")
         {
-            std::list<json> a {json(1), json(1u), json(2.2), json(false), json("string"), json()};
+            std::list<json> a {json(1), json(1u), json(2.2), json(false), json("string"), json(std::vector<uint8_t>({0x33, 0x00, 0x34})), json()};
             json j(a);
             CHECK(j.type() == json::value_t::array);
             CHECK(j == j_reference);
@@ -268,22 +286,23 @@ TEST_CASE("constructors")
 
         SECTION("std::tuple")
         {
-            const auto t = std::make_tuple(1.0, std::string{"string"}, 42, std::vector<int> {0, 1});
+            const auto t = std::make_tuple(1.0, std::string{"string"}, json(std::vector<uint8_t>({0x33, 0x00, 0x34})), 42, std::vector<int> {0, 1});
             json j(t);
 
             CHECK(j.type() == json::value_t::array);
-            REQUIRE(j.size() == 4);
+            REQUIRE(j.size() == 5);
             CHECK(j.get<decltype(t)>() == t);
             CHECK(j[0] == std::get<0>(t));
             CHECK(j[1] == std::get<1>(t));
             CHECK(j[2] == std::get<2>(t));
-            CHECK(j[3][0] == 0);
-            CHECK(j[3][1] == 1);
+            CHECK(j[3] == std::get<3>(t));
+            CHECK(j[4][0] == 0);
+            CHECK(j[4][1] == 1);
         }
 
         SECTION("std::tuple with discarded values")
         {
-            json j{1, 2.0, "string", 42};
+            json j{1, 2.0, "string", 42, std::vector<uint8_t>({0x33, 0x00, 0x34})};
 
             const auto t = j.get<std::tuple<int, float, std::string>>();
             CHECK(std::get<0>(t) == j[0]);
@@ -305,20 +324,20 @@ TEST_CASE("constructors")
 
         SECTION("std::forward_list<json>")
         {
-            std::forward_list<json> a {json(1), json(1u), json(2.2), json(false), json("string"), json()};
+            std::forward_list<json> a {json(1), json(1u), json(2.2), json(false), json("string"), json(std::vector<uint8_t>({0x33, 0x00, 0x34})), json()};
             json j(a);
             CHECK(j.type() == json::value_t::array);
             CHECK(j == j_reference);
         }
 
-        SECTION("std::array<json, 6>")
+        SECTION("std::array<json, 7>")
         {
-            std::array<json, 6> a {{json(1), json(1u), json(2.2), json(false), json("string"), json()}};
+            std::array<json, 7> a {{json(1), json(1u), json(2.2), json(false), json("string"), json(std::vector<uint8_t>({0x33, 0x00, 0x34})), json()}};
             json j(a);
             CHECK(j.type() == json::value_t::array);
             CHECK(j == j_reference);
 
-            const auto a2 = j.get<std::array<json, 6>>();
+            const auto a2 = j.get<std::array<json, 7>>();
             CHECK(a2 == a);
         }
 
@@ -354,7 +373,8 @@ TEST_CASE("constructors")
 
         SECTION("std::vector<json>")
         {
-            std::vector<json> a {json(1), json(1u), json(2.2), json(false), json("string"), json()};
+            std::vector<json> a {json(1), json(1u), json(2.2), json(false), json("string"),
+                                 json(std::vector<uint8_t>({0x33, 0x00, 0x34})), json()};
             json j(a);
             CHECK(j.type() == json::value_t::array);
             CHECK(j == j_reference);
@@ -362,7 +382,8 @@ TEST_CASE("constructors")
 
         SECTION("std::deque<json>")
         {
-            std::deque<json> a {json(1), json(1u), json(2.2), json(false), json("string"), json()};
+            std::deque<json> a {json(1), json(1u), json(2.2), json(false), json("string"),
+                                json(std::vector<uint8_t>({0x33, 0x00, 0x34})), json()};
             json j(a);
             CHECK(j.type() == json::value_t::array);
             CHECK(j == j_reference);
@@ -370,7 +391,8 @@ TEST_CASE("constructors")
 
         SECTION("std::set<json>")
         {
-            std::set<json> a {json(1), json(1u), json(2.2), json(false), json("string"), json()};
+            std::set<json> a {json(1), json(1u), json(2.2), json(false), json("string"),
+                              json(std::vector<uint8_t>({0x33, 0x00, 0x34})), json()};
             json j(a);
             CHECK(j.type() == json::value_t::array);
             // we cannot really check for equality here
@@ -378,7 +400,8 @@ TEST_CASE("constructors")
 
         SECTION("std::unordered_set<json>")
         {
-            std::unordered_set<json> a {json(1), json(1u), json(2.2), json(false), json("string"), json()};
+            std::unordered_set<json> a {json(1), json(1u), json(2.2), json(false), json("string"),
+                                        json()};
             json j(a);
             CHECK(j.type() == json::value_t::array);
             // we cannot really check for equality here
@@ -386,7 +409,7 @@ TEST_CASE("constructors")
 
         SECTION("sequence container literal")
         {
-            json j({json(1), json(1u), json(2.2), json(false), json("string"), json()});
+            json j({json(1), json(1u), json(2.2), json(false), json("string"), json(std::vector<uint8_t>({0x33, 0x00, 0x34})), json()});
             CHECK(j.type() == json::value_t::array);
             CHECK(j == j_reference);
         }
@@ -444,6 +467,23 @@ TEST_CASE("constructors")
             json j("Hello world");
             CHECK(j.type() == json::value_t::string);
             CHECK(j == j_reference);
+        }
+    }
+
+    SECTION("create a binary (explicit)")
+    {
+        SECTION("empty binary")
+        {
+            json::binary_t s;
+            json j(s);
+            CHECK(j.type() == json::value_t::binary);
+        }
+
+        SECTION("filled binary")
+        {
+            json::binary_t s {0x33, 0x00, 0x34};
+            json j(s);
+            CHECK(j.type() == json::value_t::binary);
         }
     }
 
@@ -941,6 +981,21 @@ TEST_CASE("constructors")
                 }
             }
 
+            SECTION("binary")
+            {
+                SECTION("explicit")
+                {
+                    json j(json::initializer_list_t {json(std::vector<uint8_t>({0x33, 0x00, 0x34}))});
+                    CHECK(j.type() == json::value_t::array);
+                }
+
+                SECTION("implicit")
+                {
+                    json j { std::vector<uint8_t>({0x33, 0x00, 0x34}) };
+                    CHECK(j.type() == json::value_t::array);
+                }
+            }
+
             SECTION("boolean")
             {
                 SECTION("explicit")
@@ -1091,6 +1146,25 @@ TEST_CASE("constructors")
                 {
                     json j = {{std::move(source), 42}};
                     CHECK(j.get_ref<json::object_t&>().begin()->first.data() == source_addr);
+                }
+            }
+
+            SECTION("binary")
+            {
+                // This should break through any short string optimization in std::string
+                std::vector<uint8_t> source(1024, 0x33);
+                const unsigned char* source_addr = source.data();
+
+                SECTION("constructor with implicit types (array)")
+                {
+                    json j = {std::move(source)};
+                    CHECK(j[0].get_ref<std::vector<uint8_t> const&>().data() == source_addr);
+                }
+
+                SECTION("constructor with implicit types (object)")
+                {
+                    json j = {{"key", std::move(source)}};
+                    CHECK(j["key"].get_ref<std::vector<uint8_t> const&>().data() == source_addr);
                 }
             }
 
@@ -1378,6 +1452,20 @@ TEST_CASE("constructors")
                     }
                 }
 
+                SECTION("binary")
+                {
+                    {
+                        json j = std::vector<uint8_t>({0x33, 0x00, 0x34});
+                        json j_new(j.begin(), j.end());
+                        CHECK(j == j_new);
+                    }
+                    {
+                        json j = std::vector<uint8_t>({0x33, 0x00, 0x34});
+                        json j_new(j.cbegin(), j.cend());
+                        CHECK(j == j_new);
+                    }
+                }
+
                 SECTION("number (boolean)")
                 {
                     {
@@ -1448,6 +1536,24 @@ TEST_CASE("constructors")
                     }
                     {
                         json j = "bar";
+                        CHECK_THROWS_AS(json(j.cend(), j.cend()), json::invalid_iterator&);
+                        CHECK_THROWS_AS(json(j.cbegin(), j.cbegin()), json::invalid_iterator&);
+                        CHECK_THROWS_WITH(json(j.cend(), j.cend()), "[json.exception.invalid_iterator.204] iterators out of range");
+                        CHECK_THROWS_WITH(json(j.cbegin(), j.cbegin()), "[json.exception.invalid_iterator.204] iterators out of range");
+                    }
+                }
+
+                SECTION("binary")
+                {
+                    {
+                        json j = std::vector<uint8_t>({0x33, 0x00, 0x34});
+                        CHECK_THROWS_AS(json(j.end(), j.end()), json::invalid_iterator&);
+                        CHECK_THROWS_AS(json(j.begin(), j.begin()), json::invalid_iterator&);
+                        CHECK_THROWS_WITH(json(j.end(), j.end()), "[json.exception.invalid_iterator.204] iterators out of range");
+                        CHECK_THROWS_WITH(json(j.begin(), j.begin()), "[json.exception.invalid_iterator.204] iterators out of range");
+                    }
+                    {
+                        json j = std::vector<uint8_t>({0x33, 0x00, 0x34});
                         CHECK_THROWS_AS(json(j.cend(), j.cend()), json::invalid_iterator&);
                         CHECK_THROWS_AS(json(j.cbegin(), j.cbegin()), json::invalid_iterator&);
                         CHECK_THROWS_WITH(json(j.cend(), j.cend()), "[json.exception.invalid_iterator.204] iterators out of range");

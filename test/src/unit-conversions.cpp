@@ -35,6 +35,7 @@ using nlohmann::json;
 #include <deque>
 #include <forward_list>
 #include <list>
+#include <vector>
 #include <unordered_map>
 #include <unordered_set>
 #include <valarray>
@@ -43,7 +44,7 @@ TEST_CASE("value conversion")
 {
     SECTION("get an object (explicit)")
     {
-        json::object_t o_reference = {{"object", json::object()}, {"array", {1, 2, 3, 4}}, {"number", 42}, {"boolean", false}, {"null", nullptr}, {"string", "Hello world"} };
+        json::object_t o_reference = {{"object", json::object()}, {"array", {1, 2, 3, 4}}, {"number", 42}, {"boolean", false}, {"null", nullptr}, {"string", "Hello world"}, {"binary", std::vector<uint8_t> { 0x33, 0x00, 0x34}} };
         json j(o_reference);
 
         SECTION("json::object_t")
@@ -106,7 +107,7 @@ TEST_CASE("value conversion")
 
     SECTION("get an object (implicit)")
     {
-        json::object_t o_reference = {{"object", json::object()}, {"array", {1, 2, 3, 4}}, {"number", 42}, {"boolean", false}, {"null", nullptr}, {"string", "Hello world"} };
+        json::object_t o_reference = {{"object", json::object()}, {"array", {1, 2, 3, 4}}, {"number", 42}, {"boolean", false}, {"null", nullptr}, {"string", "Hello world"}, {"binary", std::vector<uint8_t> { 0x33, 0x00, 0x34}} };
         json j(o_reference);
 
         SECTION("json::object_t")
@@ -142,7 +143,8 @@ TEST_CASE("value conversion")
 
     SECTION("get an array (explicit)")
     {
-        json::array_t a_reference {json(1), json(1u), json(2.2), json(false), json("string"), json()};
+        json::array_t a_reference {json(1), json(1u), json(2.2), json(false), json("string"),
+                                   json(), json( std::vector<uint8_t> { 0x33, 0x00, 0x34})};
         json j(a_reference);
 
         SECTION("json::array_t")
@@ -196,6 +198,7 @@ TEST_CASE("value conversion")
             const char str[] = "a string";
             const int nbs[] = {0, 1, 2};
 
+
             json j2 = nbs;
             json j3 = str;
 
@@ -216,6 +219,7 @@ TEST_CASE("value conversion")
             CHECK_THROWS_AS(json(json::value_t::null).get<json::array_t>(), json::type_error&);
             CHECK_THROWS_AS(json(json::value_t::object).get<json::array_t>(), json::type_error&);
             CHECK_THROWS_AS(json(json::value_t::string).get<json::array_t>(), json::type_error&);
+            CHECK_THROWS_AS(json(json::value_t::binary).get<json::array_t>(), json::type_error&);
             CHECK_THROWS_AS(json(json::value_t::boolean).get<json::array_t>(), json::type_error&);
             CHECK_THROWS_AS(json(json::value_t::number_integer).get<json::array_t>(), json::type_error&);
             CHECK_THROWS_AS(json(json::value_t::number_unsigned).get<json::array_t>(), json::type_error&);
@@ -229,6 +233,8 @@ TEST_CASE("value conversion")
                               "[json.exception.type_error.302] type must be array, but is object");
             CHECK_THROWS_WITH(json(json::value_t::string).get<json::array_t>(),
                               "[json.exception.type_error.302] type must be array, but is string");
+            CHECK_THROWS_WITH(json(json::value_t::binary).get<json::array_t>(),
+                              "[json.exception.type_error.302] type must be array, but is binary");
             CHECK_THROWS_WITH(json(json::value_t::boolean).get<json::array_t>(),
                               "[json.exception.type_error.302] type must be array, but is boolean");
             CHECK_THROWS_WITH(json(json::value_t::number_integer).get<json::array_t>(),
@@ -298,6 +304,7 @@ TEST_CASE("value conversion")
             CHECK_THROWS_AS(json(json::value_t::null).get<json::string_t>(), json::type_error&);
             CHECK_THROWS_AS(json(json::value_t::object).get<json::string_t>(), json::type_error&);
             CHECK_THROWS_AS(json(json::value_t::array).get<json::string_t>(), json::type_error&);
+            CHECK_THROWS_AS(json(json::value_t::binary).get<json::string_t>(), json::type_error&);
             CHECK_THROWS_AS(json(json::value_t::boolean).get<json::string_t>(), json::type_error&);
             CHECK_THROWS_AS(json(json::value_t::number_integer).get<json::string_t>(), json::type_error&);
             CHECK_THROWS_AS(json(json::value_t::number_unsigned).get<json::string_t>(), json::type_error&);
@@ -309,6 +316,8 @@ TEST_CASE("value conversion")
                               "[json.exception.type_error.302] type must be string, but is object");
             CHECK_THROWS_WITH(json(json::value_t::array).get<json::string_t>(),
                               "[json.exception.type_error.302] type must be string, but is array");
+            CHECK_THROWS_WITH(json(json::value_t::binary).get<json::string_t>(),
+                              "[json.exception.type_error.302] type must be string, but is binary");
             CHECK_THROWS_WITH(json(json::value_t::boolean).get<json::string_t>(),
                               "[json.exception.type_error.302] type must be string, but is boolean");
             CHECK_THROWS_WITH(json(json::value_t::number_integer).get<json::string_t>(),
@@ -334,6 +343,24 @@ TEST_CASE("value conversion")
         SECTION("std::string")
         {
             std::string s = j;
+            CHECK(json(s) == j);
+        }
+    }
+
+    SECTION("get a binary (implicit)")
+    {
+        json::binary_t s_reference { 0x33, 0x00, 0x34 };
+        json j(s_reference);
+
+        SECTION("binary_t")
+        {
+            json::binary_t s = j;
+            CHECK(json(s) == j);
+        }
+
+        SECTION("std::vector<uint8_t>")
+        {
+            std::vector<unsigned char> s = j;
             CHECK(json(s) == j);
         }
     }
@@ -990,6 +1017,10 @@ TEST_CASE("value conversion")
             json j3 = {1.2, 2.3, 3.4, 4.5};
             json j4 = {true, false, true};
             json j5 = {"one", "two", "three"};
+            json j6 = { std::vector<uint8_t>({0x34, 0x00}),
+                        std::vector<uint8_t>({0x35, 0x00}),
+                        std::vector<uint8_t>({0x36, 0x00})
+                      };
 
             SECTION("std::list")
             {
@@ -998,6 +1029,7 @@ TEST_CASE("value conversion")
                 j3.get<std::list<double>>();
                 j4.get<std::list<bool>>();
                 j5.get<std::list<std::string>>();
+                j6.get<std::list<std::vector<uint8_t>>>();
             }
 
             SECTION("std::forward_list")
@@ -1007,6 +1039,7 @@ TEST_CASE("value conversion")
                 j3.get<std::forward_list<double>>();
                 j4.get<std::forward_list<bool>>();
                 j5.get<std::forward_list<std::string>>();
+                j6.get<std::forward_list<std::vector<uint8_t>>>();
             }
 
             SECTION("std::array")
@@ -1016,6 +1049,7 @@ TEST_CASE("value conversion")
                 j3.get<std::array<double, 4>>();
                 j4.get<std::array<bool, 3>>();
                 j5.get<std::array<std::string, 3>>();
+                j6.get<std::array<std::vector<uint8_t>, 3>>();
 
                 SECTION("std::array is larger than JSON")
                 {
@@ -1040,6 +1074,7 @@ TEST_CASE("value conversion")
                 j3.get<std::valarray<double>>();
                 j4.get<std::valarray<bool>>();
                 j5.get<std::valarray<std::string>>();
+                //j6.get<std::valarray<std::vector<uint8_t>>>();
             }
 
             SECTION("std::vector")
@@ -1049,6 +1084,7 @@ TEST_CASE("value conversion")
                 j3.get<std::vector<double>>();
                 j4.get<std::vector<bool>>();
                 j5.get<std::vector<std::string>>();
+                j6.get<std::vector<std::vector<uint8_t>>>();
             }
 
             SECTION("std::deque")
@@ -1058,6 +1094,7 @@ TEST_CASE("value conversion")
                 j2.get<std::deque<double>>();
                 j4.get<std::deque<bool>>();
                 j5.get<std::deque<std::string>>();
+                j6.get<std::deque<std::vector<uint8_t>>>();
             }
 
             SECTION("std::set")
@@ -1067,6 +1104,7 @@ TEST_CASE("value conversion")
                 j3.get<std::set<double>>();
                 j4.get<std::set<bool>>();
                 j5.get<std::set<std::string>>();
+                j6.get<std::set<std::vector<uint8_t>>>();
             }
 
             SECTION("std::unordered_set")
@@ -1076,6 +1114,7 @@ TEST_CASE("value conversion")
                 j3.get<std::unordered_set<double>>();
                 j4.get<std::unordered_set<bool>>();
                 j5.get<std::unordered_set<std::string>>();
+                //j6.get<std::unordered_set<std::vector<uint8_t>>>();
             }
 
             SECTION("exception in case of a non-object type")

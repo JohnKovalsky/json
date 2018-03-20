@@ -56,6 +56,7 @@ TEST_CASE("bad_alloc")
               std::int64_t,
               std::uint64_t,
               double,
+              std::vector<unsigned char>,
               bad_allocator>;
 
         // creating an object should throw
@@ -131,6 +132,7 @@ TEST_CASE("controlled bad_alloc")
           std::int64_t,
           std::uint64_t,
           double,
+          std::vector<unsigned char>,
           my_allocator>;
 
     SECTION("class json_value")

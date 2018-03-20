@@ -71,6 +71,24 @@ TEST_CASE("capacity")
             }
         }
 
+        SECTION("binary")
+        {
+            json j = std::vector<uint8_t>({0x33, 0x00, 0x34});
+            const json j_const(j);
+
+            SECTION("result of empty")
+            {
+                CHECK(j.empty() == false);
+                CHECK(j_const.empty() == false);
+            }
+
+            SECTION("definition of empty")
+            {
+                CHECK(j.empty() == (j.begin() == j.end()));
+                CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
+            }
+        }
+
         SECTION("array")
         {
             SECTION("empty array")
@@ -247,6 +265,26 @@ TEST_CASE("capacity")
         SECTION("string")
         {
             json j = "hello world";
+            const json j_const(j);
+
+            SECTION("result of size")
+            {
+                CHECK(j.size() == 1);
+                CHECK(j_const.size() == 1);
+            }
+
+            SECTION("definition of size")
+            {
+                CHECK(std::distance(j.begin(), j.end()) == j.size());
+                CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+                CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+                CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+            }
+        }
+
+        SECTION("binary")
+        {
+            json j = std::vector<uint8_t>({0x33, 0x00, 0x34});
             const json j_const(j);
 
             SECTION("result of size")
@@ -448,6 +486,18 @@ TEST_CASE("capacity")
         SECTION("string")
         {
             json j = "hello world";
+            const json j_const(j);
+
+            SECTION("result of max_size")
+            {
+                CHECK(j.max_size() == 1);
+                CHECK(j_const.max_size() == 1);
+            }
+        }
+
+        SECTION("binary")
+        {
+            json j = std::vector<uint8_t>({0x33, 0x00, 0x34});
             const json j_const(j);
 
             SECTION("result of max_size")

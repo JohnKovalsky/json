@@ -71,6 +71,16 @@ void from_json(const BasicJsonType& j, typename BasicJsonType::string_t& s)
 }
 
 template<typename BasicJsonType>
+void from_json(const BasicJsonType& j, typename BasicJsonType::binary_t& s)
+{
+    if (JSON_UNLIKELY(not j.is_binary()))
+    {
+        JSON_THROW(type_error::create(302, "type must be string, but is " + std::string(j.type_name())));
+    }
+    s = *j.template get_ptr<const typename BasicJsonType::binary_t*>();
+}
+
+template<typename BasicJsonType>
 void from_json(const BasicJsonType& j, typename BasicJsonType::number_float_t& val)
 {
     get_arithmetic_value(j, val);
@@ -183,6 +193,7 @@ template <
         is_compatible_array_type<BasicJsonType, CompatibleArrayType>::value and
         not std::is_same<typename BasicJsonType::array_t,
                          CompatibleArrayType>::value and
+        not std::is_same<typename BasicJsonType::binary_t, CompatibleArrayType>::value and
         std::is_constructible <
             BasicJsonType, typename CompatibleArrayType::value_type >::value,
         int > = 0 >

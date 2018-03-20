@@ -55,6 +55,16 @@ TEST_CASE("modifiers")
             CHECK(j == json(k.type()));
         }
 
+        SECTION("binary")
+        {
+            json j = std::vector<uint8_t>({0x33, 0x00, 0x37});
+            json k = j;
+
+            j.clear();
+            CHECK(j == json(json::value_t::binary));
+            CHECK(j == json(k.type()));
+        }
+
         SECTION("array")
         {
             SECTION("empty array")
@@ -932,5 +942,6 @@ TEST_CASE("modifiers")
                 CHECK_THROWS_WITH(j.swap(s), "[json.exception.type_error.310] cannot use swap() with number");
             }
         }
+
     }
 }

@@ -35,7 +35,9 @@ TEST_CASE("element access 1")
 {
     SECTION("array")
     {
-        json j = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+        json j = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                  42.23, json::object(), {1, 2, 3}
+                 };
         const json j_const = j;
 
         SECTION("access specified element with bounds checking")
@@ -47,29 +49,31 @@ TEST_CASE("element access 1")
                 CHECK(j.at(2) == json(true));
                 CHECK(j.at(3) == json(nullptr));
                 CHECK(j.at(4) == json("string"));
-                CHECK(j.at(5) == json(42.23));
-                CHECK(j.at(6) == json::object());
-                CHECK(j.at(7) == json({1, 2, 3}));
+                CHECK(j.at(5) == json(std::vector<unsigned char> {0x33, 0x00, 0x35}));
+                CHECK(j.at(6) == json(42.23));
+                CHECK(j.at(7) == json::object());
+                CHECK(j.at(8) == json({1, 2, 3}));
 
                 CHECK(j_const.at(0) == json(1));
                 CHECK(j_const.at(1) == json(1u));
                 CHECK(j_const.at(2) == json(true));
                 CHECK(j_const.at(3) == json(nullptr));
                 CHECK(j_const.at(4) == json("string"));
-                CHECK(j_const.at(5) == json(42.23));
-                CHECK(j_const.at(6) == json::object());
-                CHECK(j_const.at(7) == json({1, 2, 3}));
+                CHECK(j_const.at(5) == json(std::vector<unsigned char> {0x33, 0x00, 0x35}));
+                CHECK(j_const.at(6) == json(42.23));
+                CHECK(j_const.at(7) == json::object());
+                CHECK(j_const.at(8) == json({1, 2, 3}));
             }
 
             SECTION("access outside bounds")
             {
-                CHECK_THROWS_AS(j.at(8), json::out_of_range&);
-                CHECK_THROWS_AS(j_const.at(8), json::out_of_range&);
+                CHECK_THROWS_AS(j.at(9), json::out_of_range&);
+                CHECK_THROWS_AS(j_const.at(9), json::out_of_range&);
 
-                CHECK_THROWS_WITH(j.at(8),
-                                  "[json.exception.out_of_range.401] array index 8 is out of range");
-                CHECK_THROWS_WITH(j_const.at(8),
-                                  "[json.exception.out_of_range.401] array index 8 is out of range");
+                CHECK_THROWS_WITH(j.at(9),
+                                  "[json.exception.out_of_range.401] array index 9 is out of range");
+                CHECK_THROWS_WITH(j_const.at(9),
+                                  "[json.exception.out_of_range.401] array index 9 is out of range");
             }
 
             SECTION("access on non-array type")
@@ -105,6 +109,17 @@ TEST_CASE("element access 1")
 
                     CHECK_THROWS_WITH(j_nonarray.at(0), "[json.exception.type_error.304] cannot use at() with string");
                     CHECK_THROWS_WITH(j_nonarray_const.at(0), "[json.exception.type_error.304] cannot use at() with string");
+                }
+
+                SECTION("binary")
+                {
+                    json j_nonarray(json::value_t::binary);
+                    const json j_nonarray_const(j_nonarray);
+                    CHECK_THROWS_AS(j_nonarray.at(0), json::type_error&);
+                    CHECK_THROWS_AS(j_nonarray_const.at(0), json::type_error&);
+
+                    CHECK_THROWS_WITH(j_nonarray.at(0), "[json.exception.type_error.304] cannot use at() with binary");
+                    CHECK_THROWS_WITH(j_nonarray_const.at(0), "[json.exception.type_error.304] cannot use at() with binary");
                 }
 
                 SECTION("object")
@@ -170,18 +185,20 @@ TEST_CASE("element access 1")
                 CHECK(j[2] == json(true));
                 CHECK(j[3] == json(nullptr));
                 CHECK(j[4] == json("string"));
-                CHECK(j[5] == json(42.23));
-                CHECK(j[6] == json::object());
-                CHECK(j[7] == json({1, 2, 3}));
+                CHECK(j[5] == json(std::vector<unsigned char> {0x33, 0x00, 0x35}));
+                CHECK(j[6] == json(42.23));
+                CHECK(j[7] == json::object());
+                CHECK(j[8] == json({1, 2, 3}));
 
                 CHECK(j_const[0] == json(1));
                 CHECK(j_const[1] == json(1u));
                 CHECK(j_const[2] == json(true));
                 CHECK(j_const[3] == json(nullptr));
                 CHECK(j_const[4] == json("string"));
-                CHECK(j_const[5] == json(42.23));
-                CHECK(j_const[6] == json::object());
-                CHECK(j_const[7] == json({1, 2, 3}));
+                CHECK(j_const[5] == json(std::vector<unsigned char> {0x33, 0x00, 0x35}));
+                CHECK(j_const[6] == json(42.23));
+                CHECK(j_const[7] == json::object());
+                CHECK(j_const[8] == json({1, 2, 3}));
             }
 
             SECTION("access on non-array type")
@@ -223,6 +240,16 @@ TEST_CASE("element access 1")
                     CHECK_THROWS_AS(j_nonarray_const[0], json::type_error&);
                     CHECK_THROWS_WITH(j_nonarray[0], "[json.exception.type_error.305] cannot use operator[] with string");
                     CHECK_THROWS_WITH(j_nonarray_const[0], "[json.exception.type_error.305] cannot use operator[] with string");
+                }
+
+                SECTION("binary")
+                {
+                    json j_nonarray(json::value_t::binary);
+                    const json j_nonarray_const(j_nonarray);
+                    CHECK_THROWS_AS(j_nonarray[0], json::type_error&);
+                    CHECK_THROWS_AS(j_nonarray_const[0], json::type_error&);
+                    CHECK_THROWS_WITH(j_nonarray[0], "[json.exception.type_error.305] cannot use operator[] with binary");
+                    CHECK_THROWS_WITH(j_nonarray_const[0], "[json.exception.type_error.305] cannot use operator[] with binary");
                 }
 
                 SECTION("object")
@@ -272,50 +299,93 @@ TEST_CASE("element access 1")
             SECTION("remove element by index")
             {
                 {
-                    json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                    json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                   42.23, json::object(), {1, 2, 3}
+                                  };
                     jarray.erase(0);
-                    CHECK(jarray == json({1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}}));
+                    CHECK(jarray == json({1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                          42.23, json::object(), {1, 2, 3}
+                                         }));
                 }
                 {
-                    json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                    json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                   42.23, json::object(), {1, 2, 3}
+                                  };
                     jarray.erase(1);
-                    CHECK(jarray == json({1, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}}));
+                    CHECK(jarray == json({1, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                          42.23, json::object(), {1, 2, 3}
+                                         }));
                 }
                 {
-                    json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                    json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                   42.23, json::object(), {1, 2, 3}
+                                  };
                     jarray.erase(2);
-                    CHECK(jarray == json({1, 1u, nullptr, "string", 42.23, json::object(), {1, 2, 3}}));
+                    CHECK(jarray == json({1, 1u, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                          42.23, json::object(), {1, 2, 3}
+                                         }));
                 }
                 {
-                    json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                    json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                   42.23, json::object(), {1, 2, 3}
+                                  };
                     jarray.erase(3);
-                    CHECK(jarray == json({1, 1u, true, "string", 42.23, json::object(), {1, 2, 3}}));
+                    CHECK(jarray == json({1, 1u, true, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                          42.23, json::object(), {1, 2, 3}
+                                         }));
                 }
                 {
-                    json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                    json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                   42.23, json::object(), {1, 2, 3}
+                                  };
                     jarray.erase(4);
-                    CHECK(jarray == json({1, 1u, true, nullptr, 42.23, json::object(), {1, 2, 3}}));
+                    CHECK(jarray == json({1, 1u, true, nullptr, std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                          42.23, json::object(), {1, 2, 3}
+                                         }));
                 }
                 {
-                    json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                    json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                   42.23, json::object(), {1, 2, 3}
+                                  };
                     jarray.erase(5);
-                    CHECK(jarray == json({1, 1u, true, nullptr, "string", json::object(), {1, 2, 3}}));
+                    CHECK(jarray == json({1, 1u, true, nullptr, "string",
+                                          42.23, json::object(), {1, 2, 3}
+                                         }));
                 }
                 {
-                    json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                    json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                   42.23, json::object(), {1, 2, 3}
+                                  };
                     jarray.erase(6);
-                    CHECK(jarray == json({1, 1u, true, nullptr, "string", 42.23, {1, 2, 3}}));
+                    CHECK(jarray == json({1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                          json::object(), {1, 2, 3}
+                                         }));
                 }
                 {
-                    json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                    json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                   42.23, json::object(), {1, 2, 3}
+                                  };
                     jarray.erase(7);
-                    CHECK(jarray == json({1, 1u, true, nullptr, "string", 42.23, json::object()}));
+                    CHECK(jarray == json({1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                          42.23, {1, 2, 3}
+                                         }));
                 }
                 {
-                    json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
-                    CHECK_THROWS_AS(jarray.erase(8), json::out_of_range&);
-                    CHECK_THROWS_WITH(jarray.erase(8),
-                                      "[json.exception.out_of_range.401] array index 8 is out of range");
+                    json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                   42.23, json::object(), {1, 2, 3}
+                                  };
+                    jarray.erase(8);
+                    CHECK(jarray == json({1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                          42.23, json::object()
+                                         }));
+                }
+                {
+                    json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                   42.23, json::object(), {1, 2, 3}
+                                  };
+                    CHECK_THROWS_AS(jarray.erase(9), json::out_of_range&);
+                    CHECK_THROWS_WITH(jarray.erase(9),
+                                      "[json.exception.out_of_range.401] array index 9 is out of range");
                 }
             }
 
@@ -324,15 +394,23 @@ TEST_CASE("element access 1")
                 SECTION("erase(begin())")
                 {
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                       42.23, json::object(), {1, 2, 3}
+                                      };
                         json::iterator it2 = jarray.erase(jarray.begin());
-                        CHECK(jarray == json({1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}}));
+                        CHECK(jarray == json({1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                              42.23, json::object(), {1, 2, 3}
+                                             }));
                         CHECK(*it2 == json(1u));
                     }
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                       42.23, json::object(), {1, 2, 3}
+                                      };
                         json::const_iterator it2 = jarray.erase(jarray.cbegin());
-                        CHECK(jarray == json({1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}}));
+                        CHECK(jarray == json({1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                              42.23, json::object(), {1, 2, 3}
+                                             }));
                         CHECK(*it2 == json(1u));
                     }
                 }
@@ -340,13 +418,17 @@ TEST_CASE("element access 1")
                 SECTION("erase(begin(), end())")
                 {
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                       42.23, json::object(), {1, 2, 3}
+                                      };
                         json::iterator it2 = jarray.erase(jarray.begin(), jarray.end());
                         CHECK(jarray == json::array());
                         CHECK(it2 == jarray.end());
                     }
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                       42.23, json::object(), {1, 2, 3}
+                                      };
                         json::const_iterator it2 = jarray.erase(jarray.cbegin(), jarray.cend());
                         CHECK(jarray == json::array());
                         CHECK(it2 == jarray.cend());
@@ -356,9 +438,13 @@ TEST_CASE("element access 1")
                 SECTION("erase(begin(), begin())")
                 {
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35}, 42.23,
+                                       json::object(), {1, 2, 3}
+                                      };
                         json::iterator it2 = jarray.erase(jarray.begin(), jarray.begin());
-                        CHECK(jarray == json({1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}}));
+                        CHECK(jarray == json({1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                              42.23, json::object(), {1, 2, 3}
+                                             }));
                         CHECK(*it2 == json(1));
                     }
                     {
@@ -372,41 +458,55 @@ TEST_CASE("element access 1")
                 SECTION("erase at offset")
                 {
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                       42.23, json::object(), {1, 2, 3}
+                                      };
                         json::iterator it = jarray.begin() + 4;
                         json::iterator it2 = jarray.erase(it);
-                        CHECK(jarray == json({1, 1u, true, nullptr, 42.23, json::object(), {1, 2, 3}}));
-                        CHECK(*it2 == json(42.23));
+                        CHECK(jarray == json({1, 1u, true, nullptr, std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                              42.23, json::object(), {1, 2, 3}
+                                             }));
+                        CHECK(*it2 == json(std::vector<unsigned char> {0x33, 0x00, 0x35}));
                     }
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                       42.23, json::object(), {1, 2, 3}
+                                      };
                         json::const_iterator it = jarray.cbegin() + 4;
                         json::const_iterator it2 = jarray.erase(it);
-                        CHECK(jarray == json({1, 1u, true, nullptr, 42.23, json::object(), {1, 2, 3}}));
-                        CHECK(*it2 == json(42.23));
+                        CHECK(jarray == json({1, 1u, true, nullptr, std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                              42.23, json::object(), {1, 2, 3}
+                                             }));
+                        CHECK(*it2 == json(std::vector<unsigned char> {0x33, 0x00, 0x35}));
                     }
                 }
 
                 SECTION("erase subrange")
                 {
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                       42.23, json::object(), {1, 2, 3}
+                                      };
                         json::iterator it2 = jarray.erase(jarray.begin() + 3, jarray.begin() + 6);
-                        CHECK(jarray == json({1, 1u, true, json::object(), {1, 2, 3}}));
-                        CHECK(*it2 == json::object());
+                        CHECK(jarray == json({1, 1u, true, 42.23, json::object(), {1, 2, 3}}));
+                        CHECK(*it2 == 42.23);
                     }
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                       42.23, json::object(), {1, 2, 3}
+                                      };
                         json::const_iterator it2 = jarray.erase(jarray.cbegin() + 3, jarray.cbegin() + 6);
-                        CHECK(jarray == json({1, 1u, true, json::object(), {1, 2, 3}}));
-                        CHECK(*it2 == json::object());
+                        CHECK(jarray == json({1, 1u, true, 42.23, json::object(), {1, 2, 3}}));
+                        CHECK(*it2 == 42.23);
                     }
                 }
 
                 SECTION("different arrays")
                 {
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                       42.23, json::object(), {1, 2, 3}
+                                      };
                         json jarray2 = {"foo", "bar"};
                         CHECK_THROWS_AS(jarray.erase(jarray2.begin()), json::invalid_iterator&);
                         CHECK_THROWS_AS(jarray.erase(jarray.begin(), jarray2.end()), json::invalid_iterator&);
@@ -423,7 +523,9 @@ TEST_CASE("element access 1")
                                           "[json.exception.invalid_iterator.203] iterators do not fit current value");
                     }
                     {
-                        json jarray = {1, 1u, true, nullptr, "string", 42.23, json::object(), {1, 2, 3}};
+                        json jarray = {1, 1u, true, nullptr, "string", std::vector<unsigned char>{0x33, 0x00, 0x35},
+                                       42.23, json::object(), {1, 2, 3}
+                                      };
                         json jarray2 = {"foo", "bar"};
                         CHECK_THROWS_AS(jarray.erase(jarray2.cbegin()), json::invalid_iterator&);
                         CHECK_THROWS_AS(jarray.erase(jarray.cbegin(), jarray2.cend()), json::invalid_iterator&);
@@ -466,6 +568,14 @@ TEST_CASE("element access 1")
                     CHECK_THROWS_AS(j_nonobject.erase(0), json::type_error&);
                     CHECK_THROWS_WITH(j_nonobject.erase(0),
                                       "[json.exception.type_error.307] cannot use erase() with string");
+                }
+
+                SECTION("binary")
+                {
+                    json j_nonobject(json::value_t::binary);
+                    CHECK_THROWS_AS(j_nonobject.erase(0), json::type_error&);
+                    CHECK_THROWS_WITH(j_nonobject.erase(0),
+                                      "[json.exception.type_error.307] cannot use erase() with binary");
                 }
 
                 SECTION("object")
@@ -534,6 +644,20 @@ TEST_CASE("element access 1")
                 }
                 {
                     const json j = "bar";
+                    CHECK(j.front() == j);
+                    CHECK(j.back() == j);
+                }
+            }
+
+            SECTION("binary")
+            {
+                {
+                    json j = std::vector<unsigned char>({0x33, 0x00, 0x35});
+                    CHECK(j.front() == j);
+                    CHECK(j.back() == j);
+                }
+                {
+                    const json j = std::vector<unsigned char>({0x33, 0x00, 0x35});
                     CHECK(j.front() == j);
                     CHECK(j.back() == j);
                 }
@@ -630,6 +754,22 @@ TEST_CASE("element access 1")
                 }
             }
 
+            SECTION("binary")
+            {
+                {
+                    json j = std::vector<unsigned char>({0x33, 0x00, 0x35});
+                    json::iterator it = j.erase(j.begin());
+                    CHECK(j.type() == json::value_t::null);
+                    CHECK(it == j.end());
+                }
+                {
+                    json j = std::vector<unsigned char>({0x33, 0x00, 0x35});
+                    json::const_iterator it = j.erase(j.cbegin());
+                    CHECK(j.type() == json::value_t::null);
+                    CHECK(it == j.end());
+                }
+            }
+
             SECTION("number (boolean)")
             {
                 {
@@ -707,6 +847,22 @@ TEST_CASE("element access 1")
                 }
                 {
                     json j = "bar";
+                    CHECK_THROWS_AS(j.erase(j.cend()), json::invalid_iterator&);
+                    CHECK_THROWS_WITH(j.erase(j.cend()),
+                                      "[json.exception.invalid_iterator.205] iterator out of range");
+                }
+            }
+
+            SECTION("binary")
+            {
+                {
+                    json j = std::vector<unsigned char>({0x33, 0x00, 0x35});
+                    CHECK_THROWS_AS(j.erase(j.end()), json::invalid_iterator&);
+                    CHECK_THROWS_WITH(j.erase(j.end()),
+                                      "[json.exception.invalid_iterator.205] iterator out of range");
+                }
+                {
+                    json j = std::vector<unsigned char>({0x33, 0x00, 0x35});
                     CHECK_THROWS_AS(j.erase(j.cend()), json::invalid_iterator&);
                     CHECK_THROWS_WITH(j.erase(j.cend()),
                                       "[json.exception.invalid_iterator.205] iterator out of range");
@@ -812,6 +968,22 @@ TEST_CASE("element access 1")
                 }
             }
 
+            SECTION("binary")
+            {
+                {
+                    json j = std::vector<unsigned char>({0x33, 0x00, 0x35});
+                    json::iterator it = j.erase(j.begin(), j.end());
+                    CHECK(j.type() == json::value_t::null);
+                    CHECK(it == j.end());
+                }
+                {
+                    json j = std::vector<unsigned char>({0x33, 0x00, 0x35});
+                    json::const_iterator it = j.erase(j.cbegin(), j.cend());
+                    CHECK(j.type() == json::value_t::null);
+                    CHECK(it == j.end());
+                }
+            }
+
             SECTION("number (boolean)")
             {
                 {
@@ -890,6 +1062,24 @@ TEST_CASE("element access 1")
                 }
                 {
                     json j = "bar";
+                    CHECK_THROWS_AS(j.erase(j.cend(), j.cend()), json::invalid_iterator&);
+                    CHECK_THROWS_AS(j.erase(j.cbegin(), j.cbegin()), json::invalid_iterator&);
+                    CHECK_THROWS_WITH(j.erase(j.cend(), j.cend()), "[json.exception.invalid_iterator.204] iterators out of range");
+                    CHECK_THROWS_WITH(j.erase(j.cbegin(), j.cbegin()), "[json.exception.invalid_iterator.204] iterators out of range");
+                }
+            }
+
+            SECTION("binary")
+            {
+                {
+                    json j = std::vector<unsigned char>({0x33, 0x00, 0x34});
+                    CHECK_THROWS_AS(j.erase(j.end(), j.end()), json::invalid_iterator&);
+                    CHECK_THROWS_AS(j.erase(j.begin(), j.begin()), json::invalid_iterator&);
+                    CHECK_THROWS_WITH(j.erase(j.end(), j.end()), "[json.exception.invalid_iterator.204] iterators out of range");
+                    CHECK_THROWS_WITH(j.erase(j.begin(), j.begin()), "[json.exception.invalid_iterator.204] iterators out of range");
+                }
+                {
+                    json j = std::vector<unsigned char>({0x33, 0x00, 0x34});;
                     CHECK_THROWS_AS(j.erase(j.cend(), j.cend()), json::invalid_iterator&);
                     CHECK_THROWS_AS(j.erase(j.cbegin(), j.cbegin()), json::invalid_iterator&);
                     CHECK_THROWS_WITH(j.erase(j.cend(), j.cend()), "[json.exception.invalid_iterator.204] iterators out of range");

@@ -92,7 +92,7 @@ struct foo_serializer < T, typename std::enable_if < !std::is_same<foo, T>::valu
 }
 
 using foo_json = nlohmann::basic_json<std::map, std::vector, std::string, bool, std::int64_t,
-      std::uint64_t, double, std::allocator, ns::foo_serializer>;
+      std::uint64_t, double, std::vector<unsigned char>, std::allocator, ns::foo_serializer>;
 
 /////////////////////////////////////////////////////////////////////
 // for #805
@@ -1596,5 +1596,27 @@ TEST_CASE("regression tests")
 
         auto j = json::parse(geojsonExample, cb, true);
         CHECK(j == json());
+    }
+
+    SECTION("binary field cannot be dumped")
+    {
+        SECTION("simple value")
+        {
+            json j = std::vector<uint8_t>({0x33, 0x00, 0x34});
+            CHECK_THROWS_WITH(j.dump(),
+                              "[json.exception.type_error.320] cannot dump binary field");
+        }
+
+        SECTION("nested value")
+        {
+            json j =
+            {
+                {"f1", std::vector<uint8_t>({0x33, 0x00, 0x34})},
+                {"f2", "string"},
+                {"f3", {1, 2, std::vector<uint8_t>({0x33, 0x00, 0x34})}},
+            };
+            CHECK_THROWS_WITH(j.dump(),
+                              "[json.exception.type_error.320] cannot dump binary field");
+        }
     }
 }

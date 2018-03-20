@@ -52,21 +52,23 @@ TEST_CASE("lexicographical comparison operators")
             json::value_t::number_float,
             json::value_t::object,
             json::value_t::array,
-            json::value_t::string
+            json::value_t::string,
+            json::value_t::binary,
         };
 
         SECTION("comparison: less")
         {
             std::vector<std::vector<bool>> expected =
             {
-                {false, true, true, true, true, true, true, true},
-                {false, false, true, true, true, true, true, true},
-                {false, false, false, false, false, true, true, true},
-                {false, false, false, false, false, true, true, true},
-                {false, false, false, false, false, true, true, true},
-                {false, false, false, false, false, false, true, true},
-                {false, false, false, false, false, false, false, true},
-                {false, false, false, false, false, false, false, false}
+                {false, true, true, true, true, true, true, true, true},
+                {false, false, true, true, true, true, true, true, true},
+                {false, false, false, false, false, true, true, true, true},
+                {false, false, false, false, false, true, true, true, true},
+                {false, false, false, false, false, true, true, true, true},
+                {false, false, false, false, false, false, true, true, true},
+                {false, false, false, false, false, false, false, true, true},
+                {false, false, false, false, false, false, false, false, true},
+                {false, false, false, false, false, false, false, false, false}
             };
 
             for (size_t i = 0; i < j_types.size(); ++i)
@@ -116,7 +118,7 @@ TEST_CASE("lexicographical comparison operators")
                 {false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false},
                 {false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false},
                 {false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false},
-                {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true}
+                {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true},
             };
 
             for (size_t i = 0; i < j_values.size(); ++i)
@@ -187,7 +189,7 @@ TEST_CASE("lexicographical comparison operators")
                 {false, false, false, false, false, false, false, false, true, true, false, false, false, true, false, false},
                 {false, false, false, false, false, false, false, false, true, true, false, false, false, false, false, false},
                 {false, false, false, false, false, false, false, false, true, true, false, false, true, true, false, false},
-                {false, false, false, false, false, false, false, false, true, true, false, false, true, true, true, false}
+                {false, false, false, false, false, false, false, false, true, true, false, false, true, true, true, false},
             };
 
             for (size_t i = 0; i < j_values.size(); ++i)
@@ -253,6 +255,111 @@ TEST_CASE("lexicographical comparison operators")
                     // check definition
                     CHECK( (j_values[i] >= j_values[j]) == not(j_values[i] < j_values[j]) );
                 }
+            }
+        }
+    }
+
+    SECTION("binary values")
+    {
+        json j_values =
+        {
+            nullptr, nullptr,
+            -17, 42,
+            8u, 13u,
+            3.14159, 23.42,
+            "foo", "bar",
+            true, false,
+            {1, 2, 3}, {"one", "two", "three"},
+            {{"first", 1}, {"second", 2}}, {{"a", "A"}, {"b", {"B"}}}
+        };
+
+        json binary_values =
+        {
+            std::vector<uint8_t>({0x33, 0x00, 0x35}),
+            std::vector<uint8_t>({0x33, 0x00, 0x35}),
+            std::vector<uint8_t>({0x33, 0x00, 0x34})
+        };
+
+        SECTION("comparison: self equal")
+        {
+            CHECK((binary_values[1] == binary_values[0]) == true);
+            CHECK((binary_values[1] == binary_values[2]) == false);
+        }
+
+        SECTION("comparison: equal")
+        {
+            for (size_t i = 0; i < j_values.size(); ++i)
+            {
+                CAPTURE(i);
+                CAPTURE(j_values[i]);
+                // check precomputed values
+                CHECK((j_values[i] == binary_values[0]) == false);
+                CHECK((j_values[i] == binary_values[1]) == false);
+                CHECK((j_values[i] == binary_values[2]) == false);
+            }
+
+            // comparison with discarded elements
+            json j_discarded(json::value_t::discarded);
+            for (size_t i = 0; i < j_values.size(); ++i)
+            {
+                CAPTURE(i);
+                CHECK((j_values[i] == j_discarded) == false);
+                CHECK((j_discarded == j_values[i]) == false);
+                CHECK((j_discarded == j_discarded) == false);
+            }
+        }
+
+        SECTION("comparison: less")
+        {
+            for (size_t i = 0; i < j_values.size(); ++i)
+            {
+                CAPTURE(i);
+                CAPTURE(j_values[i]);
+                // check precomputed values
+                CHECK((j_values[i] < binary_values[0]) == true);
+                CHECK((j_values[i] < binary_values[1]) == true);
+                CHECK((j_values[i] < binary_values[2]) == true);
+            }
+
+            // comparison with discarded elements
+            json j_discarded(json::value_t::discarded);
+            for (size_t i = 0; i < j_values.size(); ++i)
+            {
+                CAPTURE(i);
+                CHECK((j_values[i] < j_discarded) == false);
+                CHECK((j_discarded < j_values[i]) == false);
+                CHECK((j_discarded < j_discarded) == false);
+            }
+        }
+
+        SECTION("comparison: less than or equal equal")
+        {
+            for (size_t i = 0; i < j_values.size(); ++i)
+            {
+                CAPTURE(i);
+                // check definition
+                CHECK( (j_values[i] <= binary_values[0]) == not(binary_values[0] < j_values[i]) );
+
+            }
+        }
+
+        SECTION("comparison: greater than")
+        {
+            for (size_t i = 0; i < j_values.size(); ++i)
+            {
+                CAPTURE(i);
+                // check definition
+                CHECK( (j_values[i] > binary_values[0]) == (binary_values[0] < j_values[i]) );
+            }
+        }
+
+        SECTION("comparison: greater than or equal")
+        {
+            for (size_t i = 0; i < j_values.size(); ++i)
+            {
+                CAPTURE(i);
+                // check definition
+                CHECK( (j_values[i] >= binary_values[0]) == not(j_values[i] < binary_values[0]) );
             }
         }
     }

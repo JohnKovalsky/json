@@ -70,6 +70,13 @@ TEST_CASE("other constructors and destructor")
             CHECK(j == k);
         }
 
+        SECTION("binary")
+        {
+            json j(std::vector<uint8_t>({0x33, 0x00, 0x34}));
+            json k(j);
+            CHECK(j == k);
+        }
+
         SECTION("number (integer)")
         {
             json j(42);
@@ -143,6 +150,14 @@ TEST_CASE("other constructors and destructor")
             CHECK(j == k);
         }
 
+        SECTION("binary")
+        {
+            json j(std::vector<uint8_t>({0x33, 0x00, 0x34}));
+            json k;
+            k = j;
+            CHECK(j == k);
+        }
+
         SECTION("number (integer)")
         {
             json j(42);
@@ -185,6 +200,12 @@ TEST_CASE("other constructors and destructor")
         SECTION("string")
         {
             auto j = new json("Hello world");
+            delete j;
+        }
+
+        SECTION("binary")
+        {
+            auto j = new json(std::vector<uint8_t>({0x33, 0x00, 0x34}));
             delete j;
         }
     }

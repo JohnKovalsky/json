@@ -566,6 +566,10 @@ class basic_json
     */
     using string_t = StringType;
 
+
+    //TODO: documentation
+    using binary_t = BinaryType;
+
     /*!
     @brief a type for a boolean
 
@@ -860,6 +864,8 @@ class basic_json
         array_t* array;
         /// string (stored with pointer to save storage)
         string_t* string;
+        /// binary
+        binary_t* binary;
         /// boolean
         boolean_t boolean;
         /// number (integer)
@@ -899,6 +905,12 @@ class basic_json
                 case value_t::string:
                 {
                     string = create<string_t>("");
+                    break;
+                }
+
+                case value_t::binary:
+                {
+                    binary = create<binary_t>();
                     break;
                 }
 
@@ -956,6 +968,16 @@ class basic_json
             string = create<string_t>(std::move(value));
         }
 
+        json_value(const binary_t& value)
+        {
+            binary = create<binary_t>(value);
+        }
+
+        json_value(binary_t&& value)
+        {
+            binary = create<binary_t>(std::move(value));
+        }
+
         /// constructor for objects
         json_value(const object_t& value)
         {
@@ -1008,6 +1030,14 @@ class basic_json
                     break;
                 }
 
+                case value_t::binary:
+                {
+                    AllocatorType<binary_t> alloc;
+                    std::allocator_traits<decltype(alloc)>::destroy(alloc, binary);
+                    std::allocator_traits<decltype(alloc)>::deallocate(alloc, binary, 1);
+                    break;
+                }
+
                 default:
                 {
                     break;
@@ -1030,6 +1060,7 @@ class basic_json
         assert(m_type != value_t::object or m_value.object != nullptr);
         assert(m_type != value_t::array or m_value.array != nullptr);
         assert(m_type != value_t::string or m_value.string != nullptr);
+        assert(m_type != value_t::binary or m_value.binary != nullptr);
     }
 
   public:
@@ -1279,8 +1310,10 @@ class basic_json
         using other_number_integer_t = typename BasicJsonType::number_integer_t;
         using other_number_unsigned_t = typename BasicJsonType::number_unsigned_t;
         using other_string_t = typename BasicJsonType::string_t;
+        using other_binary_t = typename BasicJsonType::binary_t;
         using other_object_t = typename BasicJsonType::object_t;
         using other_array_t = typename BasicJsonType::array_t;
+
 
         switch (val.type())
         {
@@ -1298,6 +1331,9 @@ class basic_json
                 break;
             case value_t::string:
                 JSONSerializer<other_string_t>::to_json(*this, val.template get_ref<const other_string_t&>());
+                break;
+            case value_t::binary:
+                JSONSerializer<other_binary_t>::to_json(*this, val.template get_ref<const other_binary_t&>());
                 break;
             case value_t::object:
                 JSONSerializer<other_object_t>::to_json(*this, val.template get_ref<const other_object_t&>());
@@ -1635,6 +1671,7 @@ class basic_json
             case value_t::number_integer:
             case value_t::number_unsigned:
             case value_t::string:
+            case value_t::binary:
             {
                 if (JSON_UNLIKELY(not first.m_it.primitive_iterator.is_begin()
                                   or not last.m_it.primitive_iterator.is_end()))
@@ -1677,6 +1714,12 @@ class basic_json
             case value_t::string:
             {
                 m_value = *first.m_object->m_value.string;
+                break;
+            }
+
+            case value_t::binary:
+            {
+                m_value = *first.m_object->m_value.binary;
                 break;
             }
 
@@ -1760,6 +1803,12 @@ class basic_json
             case value_t::string:
             {
                 m_value = *other.m_value.string;
+                break;
+            }
+
+            case value_t::binary:
+            {
+                m_value = *other.m_value.binary;
                 break;
             }
 
@@ -2280,6 +2329,12 @@ class basic_json
         return (m_type == value_t::string);
     }
 
+    // TODO: documentation
+    constexpr bool is_binary() const noexcept
+    {
+        return (m_type == value_t::binary);
+    }
+
     /*!
     @brief return whether value is discarded
 
@@ -2385,6 +2440,18 @@ class basic_json
     constexpr const string_t* get_impl_ptr(const string_t* /*unused*/) const noexcept
     {
         return is_string() ? m_value.string : nullptr;
+    }
+
+    /// get a pointer to the value (binary)
+    binary_t* get_impl_ptr(binary_t* /*unused*/) noexcept
+    {
+        return is_binary() ? m_value.binary : nullptr;
+    }
+
+    /// get a pointer to the value (binary)
+    constexpr const binary_t* get_impl_ptr(const binary_t* /*unused*/) const noexcept
+    {
+        return is_binary() ? m_value.binary : nullptr;
     }
 
     /// get a pointer to the value (boolean)
@@ -2700,6 +2767,7 @@ class basic_json
             std::is_same<object_t, pointee_t>::value
             or std::is_same<array_t, pointee_t>::value
             or std::is_same<string_t, pointee_t>::value
+            or std::is_same<binary_t, pointee_t>::value
             or std::is_same<boolean_t, pointee_t>::value
             or std::is_same<number_integer_t, pointee_t>::value
             or std::is_same<number_unsigned_t, pointee_t>::value
@@ -2728,6 +2796,7 @@ class basic_json
             std::is_same<object_t, pointee_t>::value
             or std::is_same<array_t, pointee_t>::value
             or std::is_same<string_t, pointee_t>::value
+            or std::is_same<binary_t, pointee_t>::value
             or std::is_same<boolean_t, pointee_t>::value
             or std::is_same<number_integer_t, pointee_t>::value
             or std::is_same<number_unsigned_t, pointee_t>::value
@@ -3600,6 +3669,7 @@ class basic_json
             case value_t::number_integer:
             case value_t::number_unsigned:
             case value_t::string:
+            case value_t::binary:
             {
                 if (JSON_UNLIKELY(not pos.m_it.primitive_iterator.is_begin()))
                 {
@@ -3705,6 +3775,7 @@ class basic_json
             case value_t::number_integer:
             case value_t::number_unsigned:
             case value_t::string:
+            case value_t::binary:
             {
                 if (JSON_LIKELY(not first.m_it.primitive_iterator.is_begin()
                                 or not last.m_it.primitive_iterator.is_end()))
@@ -4636,6 +4707,12 @@ class basic_json
                 break;
             }
 
+            case value_t::binary:
+            {
+                m_value.binary->clear();
+                break;
+            }
+
             case value_t::array:
             {
                 m_value.array->clear();
@@ -5485,6 +5562,9 @@ class basic_json
                 case value_t::string:
                     return (*lhs.m_value.string == *rhs.m_value.string);
 
+                case value_t::binary:
+                    return (*lhs.m_value.binary == *rhs.m_value.binary);
+
                 case value_t::boolean:
                     return (lhs.m_value.boolean == rhs.m_value.boolean);
 
@@ -5642,6 +5722,9 @@ class basic_json
 
                 case value_t::string:
                     return *lhs.m_value.string < *rhs.m_value.string;
+
+                case value_t::binary:
+                    return *lhs.m_value.binary < *rhs.m_value.binary;
 
                 case value_t::boolean:
                     return lhs.m_value.boolean < rhs.m_value.boolean;
@@ -6185,6 +6268,8 @@ class basic_json
                     return "array";
                 case value_t::string:
                     return "string";
+                case value_t::binary:
+                    return "binary";
                 case value_t::boolean:
                     return "boolean";
                 case value_t::discarded:

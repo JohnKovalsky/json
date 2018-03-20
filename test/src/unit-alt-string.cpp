@@ -134,6 +134,7 @@ using alt_json = nlohmann::basic_json <
                  std::int64_t,
                  std::uint64_t,
                  double,
+                 std::vector<unsigned char>,
                  std::allocator,
                  nlohmann::adl_serializer >;
 

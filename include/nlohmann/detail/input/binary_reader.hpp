@@ -37,6 +37,7 @@ class binary_reader
     using number_integer_t = typename BasicJsonType::number_integer_t;
     using number_unsigned_t = typename BasicJsonType::number_unsigned_t;
     using string_t = typename BasicJsonType::string_t;
+    using binary_t = typename BasicJsonType::binary_t;
 
   public:
     /*!
@@ -672,6 +673,15 @@ class binary_reader
             case 0xC3: // true
                 return true;
 
+            case 0xC4: // bin 8
+                return get_binary( get_number<uint8_t>());
+
+            case 0xC5: // bin 16
+                return get_binary( get_number<uint16_t>());
+
+            case 0xC6: // bin 32
+                return get_binary( get_number<uint32_t>());
+
             case 0xCA: // float 32
                 return get_number<float>();
 
@@ -872,6 +882,20 @@ class binary_reader
             get();
             unexpect_eof();
             return static_cast<char>(current);
+        });
+        return result;
+    }
+
+    //TODO: documentation
+    template<typename NumberType>
+    binary_t get_binary(const NumberType len)
+    {
+        binary_t result;
+        std::generate_n(std::back_inserter(result), len, [this]()
+        {
+            get();
+            unexpect_eof();
+            return static_cast<unsigned char>(current);
         });
         return result;
     }

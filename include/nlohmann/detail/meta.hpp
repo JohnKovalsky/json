@@ -148,6 +148,8 @@ struct is_compatible_array_type
         BasicJsonType, CompatibleArrayType>>,
         negation<std::is_constructible<typename BasicJsonType::string_t,
         CompatibleArrayType>>,
+        negation<std::is_constructible<typename BasicJsonType::binary_t,
+        CompatibleArrayType>>,
         negation<is_basic_json_nested_type<BasicJsonType, CompatibleArrayType>>,
         has_value_type<CompatibleArrayType>,
         has_iterator<CompatibleArrayType>>::value;

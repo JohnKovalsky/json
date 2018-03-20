@@ -54,6 +54,26 @@ struct external_constructor<value_t::string>
 };
 
 template<>
+struct external_constructor<value_t::binary>
+{
+    template<typename BasicJsonType>
+    static void construct(BasicJsonType& j, const typename BasicJsonType::binary_t& s)
+    {
+        j.m_type = value_t::binary;
+        j.m_value = s;
+        j.assert_invariant();
+    }
+
+    template<typename BasicJsonType>
+    static void construct(BasicJsonType& j, typename BasicJsonType::binary_t&& s)
+    {
+        j.m_type = value_t::binary;
+        j.m_value = std::move(s);
+        j.assert_invariant();
+    }
+};
+
+template<>
 struct external_constructor<value_t::number_float>
 {
     template<typename BasicJsonType>
@@ -199,6 +219,24 @@ template<typename BasicJsonType>
 void to_json(BasicJsonType& j, typename BasicJsonType::string_t&& s)
 {
     external_constructor<value_t::string>::construct(j, std::move(s));
+}
+
+template<typename BasicJsonType>
+void to_json(BasicJsonType& j, typename BasicJsonType::binary_t&& s)
+{
+    external_constructor<value_t::binary>::construct(j, std::move(s));
+}
+
+template<typename BasicJsonType>
+void to_json(BasicJsonType& j, typename BasicJsonType::binary_t& s)
+{
+    external_constructor<value_t::binary>::construct(j, s);
+}
+
+template<typename BasicJsonType>
+void to_json(BasicJsonType& j, const typename BasicJsonType::binary_t& s)
+{
+    external_constructor<value_t::binary>::construct(j, s);
 }
 
 template<typename BasicJsonType, typename FloatType,

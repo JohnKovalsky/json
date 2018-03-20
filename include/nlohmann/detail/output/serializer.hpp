@@ -221,6 +221,13 @@ class serializer
                 return;
             }
 
+            case value_t::binary:
+            {
+                JSON_THROW(type_error::create(320, "cannot dump binary field"));
+                return;
+            }
+
+
             case value_t::boolean:
             {
                 if (val.m_value.boolean)

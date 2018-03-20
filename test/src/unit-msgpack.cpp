@@ -828,6 +828,107 @@ TEST_CASE("MessagePack")
             }
         }
 
+        SECTION("binary")
+        {
+
+            SECTION("N = 1..255")
+            {
+                for (size_t N = 1; N <= 2; ++N)
+                {
+                    CAPTURE(N);
+
+                    // create JSON value with binary array containing of N * '0x33'
+                    const auto s = std::vector<unsigned char>(N, 0x33);
+                    json j = s;
+
+                    // create expected byte vector
+                    std::vector<uint8_t> expected;
+                    expected.push_back(0xc4);
+                    expected.push_back(static_cast<uint8_t>(N));
+                    for (size_t i = 0; i < N; ++i)
+                    {
+                        expected.push_back(0x33);
+                    }
+
+                    // compare result + size
+                    const auto result = json::to_msgpack(j);
+                    CHECK(result == expected);
+                    CHECK(result.size() == N + 2);
+                    // check that no null byte is appended
+                    CHECK(result.back() != '\x00');
+
+                    // roundtrip
+                    CHECK(json::from_msgpack(result) == j);
+                }
+            }
+
+            SECTION("N = 256..65535")
+            {
+                for (size_t N :
+                        {
+                            256u, 999u, 1025u, 3333u, 2048u, 65535u
+                        })
+                {
+                    CAPTURE(N);
+
+                    // create JSON value with binary array containing of N * '0x33'
+                    const auto s = std::vector<unsigned char>(N, 0x33);
+                    json j = s;
+
+                    // create expected byte vector (hack: create string first)
+                    std::vector<uint8_t> expected(N, 0x33);
+                    // reverse order of commands, because we insert at begin()
+                    expected.insert(expected.begin(), static_cast<uint8_t>(N & 0xff));
+                    expected.insert(expected.begin(), static_cast<uint8_t>((N >> 8) & 0xff));
+                    expected.insert(expected.begin(), 0xc5);
+
+                    // compare result + size
+                    const auto result = json::to_msgpack(j);
+                    CHECK(result == expected);
+                    CHECK(result.size() == N + 3);
+                    // check that no null byte is appended
+                    CHECK(result.back() != '\x00');
+
+                    // roundtrip
+                    CHECK(json::from_msgpack(result) == j);
+                }
+            }
+
+            SECTION("N = 65536..4294967295")
+            {
+                for (size_t N :
+                        {
+                            65536u, 77777u, 1048576u
+                        })
+                {
+                    CAPTURE(N);
+
+                    // create JSON value with binary array containing of N * '0x33'
+                    const auto s = std::vector<unsigned char>(N, 0x33);
+                    json j = s;
+
+                    // create expected byte vector (hack: create string first)
+                    std::vector<uint8_t> expected(N, 0x33);
+                    // reverse order of commands, because we insert at begin()
+                    expected.insert(expected.begin(), static_cast<uint8_t>(N & 0xff));
+                    expected.insert(expected.begin(), static_cast<uint8_t>((N >> 8) & 0xff));
+                    expected.insert(expected.begin(), static_cast<uint8_t>((N >> 16) & 0xff));
+                    expected.insert(expected.begin(), static_cast<uint8_t>((N >> 24) & 0xff));
+                    expected.insert(expected.begin(), 0xc6);
+
+                    // compare result + size
+                    const auto result = json::to_msgpack(j);
+                    CHECK(result == expected);
+                    CHECK(result.size() == N + 5);
+                    // check that no null byte is appended
+                    CHECK(result.back() != '\x00');
+
+                    // roundtrip
+                    CHECK(json::from_msgpack(result) == j);
+                }
+            }
+        }
+
         SECTION("array")
         {
             SECTION("empty")
@@ -1078,9 +1179,10 @@ TEST_CASE("MessagePack")
                 CHECK_THROWS_AS(json::from_msgpack(std::vector<uint8_t>({0xc1})), json::parse_error&);
                 CHECK_THROWS_WITH(json::from_msgpack(std::vector<uint8_t>({0xc1})),
                                   "[json.exception.parse_error.112] parse error at 1: error reading MessagePack; last byte: 0xC1");
-                CHECK_THROWS_AS(json::from_msgpack(std::vector<uint8_t>({0xc6})), json::parse_error&);
-                CHECK_THROWS_WITH(json::from_msgpack(std::vector<uint8_t>({0xc6})),
-                                  "[json.exception.parse_error.112] parse error at 1: error reading MessagePack; last byte: 0xC6");
+                //TODO: remove following assert
+                //CHECK_THROWS_AS(json::from_msgpack(std::vector<uint8_t>({0xc6})), json::parse_error&);
+                //CHECK_THROWS_WITH(json::from_msgpack(std::vector<uint8_t>({0xc6})),
+                //                  "[json.exception.parse_error.112] parse error at 1: error reading MessagePack; last byte: 0xC6");
             }
 
             SECTION("all unsupported bytes")
@@ -1089,8 +1191,6 @@ TEST_CASE("MessagePack")
                         {
                             // never used
                             0xc1,
-                            // bin
-                            0xc4, 0xc5, 0xc6,
                             // ext
                             0xc7, 0xc8, 0xc9,
                             // fixext
@@ -1392,3 +1492,103 @@ TEST_CASE("MessagePack roundtrips", "[hide]")
         }
     }
 }
+
+TEST_CASE("MessagePack binary field cross library")
+{
+    SECTION("input from MpMessagePack")
+    {
+        for (std::string basename :
+                {
+                    "test/data/binary_field/msgpack_binary1_1",
+                    "test/data/binary_field/msgpack_binary1_1048576",
+                    "test/data/binary_field/msgpack_binary1_15",
+                    "test/data/binary_field/msgpack_binary1_16000",
+                    "test/data/binary_field/msgpack_binary1_255",
+                    "test/data/binary_field/msgpack_binary1_31",
+                    "test/data/binary_field/msgpack_binary1_64",
+                    "test/data/binary_field/msgpack_binary1_65536",
+                    "test/data/binary_field/msgpack_binary1_77777",
+                })
+        {
+
+
+            CAPTURE(basename);
+
+            std::string json_filename    = basename + ".json";
+            std::string data_filename    = basename + ".data";
+            std::string msgpack_filename = basename + ".msgpack";
+
+            // parse JSON file
+            std::ifstream f_json(json_filename);
+            json j1 = json::parse(f_json);
+
+            // read binary data
+            std::ifstream f_data(data_filename, std::ios::binary);
+            std::vector<uint8_t> bin_data((std::istreambuf_iterator<char>(f_data)),
+                                          std::istreambuf_iterator<char>());
+
+            std::ifstream f_msgpack(msgpack_filename, std::ios::binary);
+            std::vector<uint8_t> msgpack_packed((std::istreambuf_iterator<char>(f_msgpack)),
+                                                std::istreambuf_iterator<char>());
+
+            CHECK(bin_data.size() > 0);
+            CHECK(msgpack_packed.size() > 0);
+
+            j1["body"] = bin_data;
+
+            json json_msgpack;
+            CHECK_NOTHROW(json_msgpack = json::from_msgpack(msgpack_packed));
+
+            CHECK(json_msgpack == j1);
+        }
+    }
+
+    SECTION("input from MpMessagePack [nested]")
+    {
+        for (std::string basename :
+                {
+                    "test/data/binary_field/msgpack_binary2_1",
+                    "test/data/binary_field/msgpack_binary2_1048576",
+                    "test/data/binary_field/msgpack_binary2_15",
+                    "test/data/binary_field/msgpack_binary2_16000",
+                    "test/data/binary_field/msgpack_binary2_255",
+                    "test/data/binary_field/msgpack_binary2_31",
+                    "test/data/binary_field/msgpack_binary2_64",
+                    "test/data/binary_field/msgpack_binary2_65536",
+                    "test/data/binary_field/msgpack_binary2_77777",
+                })
+        {
+
+
+            CAPTURE(basename);
+
+            std::string json_filename    = basename + ".json";
+            std::string data_filename    = basename + ".data";
+            std::string msgpack_filename = basename + ".msgpack";
+
+            // parse JSON file
+            std::ifstream f_json(json_filename);
+            json j1 = json::parse(f_json);
+
+            // read binary data
+            std::ifstream f_data(data_filename, std::ios::binary);
+            std::vector<uint8_t> bin_data((std::istreambuf_iterator<char>(f_data)),
+                                          std::istreambuf_iterator<char>());
+
+            std::ifstream f_msgpack(msgpack_filename, std::ios::binary);
+            std::vector<uint8_t> msgpack_packed((std::istreambuf_iterator<char>(f_msgpack)),
+                                                std::istreambuf_iterator<char>());
+
+            CHECK(bin_data.size() > 0);
+            CHECK(msgpack_packed.size() > 0);
+
+            j1["body"]["f1"] = bin_data;
+
+            json json_msgpack;
+            CHECK_NOTHROW(json_msgpack = json::from_msgpack(msgpack_packed));
+
+            CHECK(json_msgpack == j1);
+        }
+    }
+}
+

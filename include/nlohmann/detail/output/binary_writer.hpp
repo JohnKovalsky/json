@@ -194,6 +194,12 @@ class binary_writer
                 break;
             }
 
+            case value_t::binary:
+            {
+                JSON_THROW( other_error::create( 601, "cannot serialize binary field") );
+                break;
+            }
+
             case value_t::array:
             {
                 // step 1: write control byte and the array size
@@ -448,6 +454,34 @@ class binary_writer
                 oa->write_characters(
                     reinterpret_cast<const CharType*>(j.m_value.string->c_str()),
                     j.m_value.string->size());
+                break;
+            }
+
+            case value_t::binary:
+            {
+                const auto N = j.m_value.binary->size();
+                // step 1: write control byte and the binary length
+                if (N <= (std::numeric_limits<uint8_t>::max)())
+                {
+                    oa->write_character(static_cast<CharType>(0xC4));
+                    write_number(static_cast<uint8_t>(N));
+                }
+                else if (N <= (std::numeric_limits<uint16_t>::max)())
+                {
+                    oa->write_character(static_cast<CharType>(0xC5));
+                    write_number(static_cast<uint16_t>(N));
+                }
+                else if (N <= (std::numeric_limits<uint32_t>::max)())
+                {
+                    oa->write_character(static_cast<CharType>(0xC6));
+                    write_number(static_cast<uint32_t>(N));
+                }
+
+
+                // step 2: write the binary data
+                oa->write_characters(
+                    reinterpret_cast<const CharType*>(j.m_value.binary->data()),
+                    j.m_value.binary->size());
                 break;
             }
 
