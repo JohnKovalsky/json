@@ -3,10 +3,10 @@
 Extension provides `json` object a new ability to store binary data using `std::vector<uint8_t>` type dedicated for use with `json.hpp` Message Pack serializer and parser.
 
 
-'''Note''': binary field is not compatible with json serializer and parser. Do not use binary field with `dump` functions.
+**Note**: binary field is not compatible with json serializer and parser. Do not use json object containing binary field with `dump` functions.
 
 
-###Example:
+### Example:
 ```cpp
 #include "json.hpp"
 #include <vector>
