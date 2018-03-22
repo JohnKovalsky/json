@@ -34,9 +34,13 @@ json j3;
 j3["f1"] = "test";
 j3["f2"] = binaryData;
 
+/// restore from json object
+std::vector<uint8_t> d = j3["f2"];
+
 /// serialize deserialize using Message Pack
-vector<uint8_t> packed = json::to_msgpack(jsonObj);
+vector<uint8_t> packed = json::to_msgpack(j3);
 json restoredJson = json::from_msgpack(packed);
+
 std::vector<uint8_t> restoredData = restoredJson.at("f2");
 
 /// do not:
